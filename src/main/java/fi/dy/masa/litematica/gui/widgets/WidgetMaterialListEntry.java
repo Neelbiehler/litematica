@@ -205,16 +205,16 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
         // Draw a lighter background for the hovered and the selected entry
         if (this.header1 == null && (selected || this.isMouseOver(mouseX, mouseY)))
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0707070);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF2B3B4B);
         }
         else if (this.isOdd)
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0101010);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF121C28);
         }
         // Draw a slightly lighter background for even entries
         else
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0303030);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF1C2937);
         }
 
         int x1 = this.getColumnPosX(0);
@@ -258,7 +258,7 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
 
             //mc.getRenderItem().zLevel -= 110;
             y = this.y + 3;
-            RenderUtils.drawRect(ctx, x1, y, 16, 16, 0x20FFFFFF); // light background for the item
+            RenderUtils.drawRect(ctx, x1, y, 16, 16, 0xFF121C28); // light background for the item
 			ctx.renderItem(this.entry.getStack(), x1, y);
             //mc.getRenderItem().renderItemOverlayIntoGUI(mc.fontRenderer, this.entry.getStack(), x1, y, null);
             //mc.getRenderItem().zLevel += 110;
@@ -320,7 +320,7 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
             this.drawString(ctx, x1, y, 0xFFFFFFFF, header3);
             this.drawString(ctx, x2, y, 0xFFFFFFFF, strCountMissing);
 
-            RenderUtils.drawRect(ctx, x2, y1, 16, 16, 0x20FFFFFF); // light background for the item
+            RenderUtils.drawRect(ctx, x2, y1, 16, 16, 0xFF121C28); // light background for the item
 
             //mc.getRenderItem().zLevel += 100;
 			ctx.renderItem(stack, x2, y1);

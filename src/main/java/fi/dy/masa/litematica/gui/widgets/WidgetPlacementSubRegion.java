@@ -85,16 +85,16 @@ public class WidgetPlacementSubRegion extends WidgetListEntryBase<SubRegionPlace
         // Draw a lighter background for the hovered and the selected entry
         if (selected || placementSelected || this.isMouseOver(mouseX, mouseY))
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0707070);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF2B3B4B);
         }
         else if (this.isOdd)
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0101010);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF121C28);
         }
         // Draw a slightly lighter background for even entries
         else
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0303030);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF1C2937);
         }
 
         if (placementSelected)

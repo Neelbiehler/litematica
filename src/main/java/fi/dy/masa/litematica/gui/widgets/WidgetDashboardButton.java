@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.gui.widgets;
 
+import fi.dy.masa.litematica.gui.UiTheme;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -20,7 +21,7 @@ public class WidgetDashboardButton extends ButtonBase
                                  String description, boolean accent)
     {
         super(x, y, width, height, title);
-        this.description = description;
+        this.description = description.split("\\R", 2)[0];
         this.accent = accent;
         this.setHoverStrings(title, description);
     }
@@ -119,10 +120,6 @@ public class WidgetDashboardButton extends ButtonBase
 
     public static void drawSurface(GuiContext ctx, int x, int y, int width, int height, int color)
     {
-        RenderUtils.drawRect(ctx, x + 2, y, width - 4, height, color);
-        RenderUtils.drawRect(ctx, x + 1, y + 1, 1, height - 2, color);
-        RenderUtils.drawRect(ctx, x + width - 2, y + 1, 1, height - 2, color);
-        RenderUtils.drawRect(ctx, x, y + 2, 1, height - 4, color);
-        RenderUtils.drawRect(ctx, x + width - 1, y + 2, 1, height - 4, color);
+        UiTheme.surface(ctx, x, y, width, height, color);
     }
 }

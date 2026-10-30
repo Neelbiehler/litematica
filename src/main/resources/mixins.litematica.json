@@ -30,6 +30,8 @@
         "world.MixinLevelChunk"
     ],
     "client": [
+        "screen.MixinLitematicaGuiTheme",
+        "screen.MixinLitematicaButtonTheme",
         "client.MixinMinecraft",
         "client.MixinOptions",
         "easyplace.MixinClientPlayerInteractionManager_easyPlace",

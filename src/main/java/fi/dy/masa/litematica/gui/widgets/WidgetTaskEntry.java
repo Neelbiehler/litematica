@@ -34,16 +34,16 @@ public class WidgetTaskEntry extends WidgetListEntryBase<ITask>
         // Draw a lighter background for the hovered and the selected entry
         if (selected || this.isMouseOver(mouseX, mouseY))
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0x70FFFFFF);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF2B3B4B);
         }
         else if (this.isOdd)
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0x20FFFFFF);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF121C28);
         }
         // Draw a slightly lighter background for even entries
         else
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0x50FFFFFF);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF1C2937);
         }
 
         String name = this.getEntry().getDisplayName();

@@ -221,12 +221,12 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
         selected = this.shouldRenderAsSelected();
 
         // Default color for even entries
-        int color = 0xA0303030;
+        int color = 0xFF1C2937;
 
         // Draw a lighter background for the hovered and the selected entry
         if (selected)
         {
-            color = 0xA0707070;
+            color = 0xFF2B3B4B;
         }
         else if (this.isMouseOver(mouseX, mouseY))
         {
@@ -235,7 +235,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
         // Draw a slightly darker background for odd entries
         else if (this.isOdd)
         {
-            color = 0xA0101010;
+            color = 0xFF121C28;
         }
 
         RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, color);
@@ -277,7 +277,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
             this.drawString(ctx, x3, y, color, String.valueOf(this.count));
 
             y = this.y + 3;
-            RenderUtils.drawRect(ctx, x1, y, 16, 16, 0x20FFFFFF); // light background for the item
+            RenderUtils.drawRect(ctx, x1, y, 16, 16, 0xFF121C28); // light background for the item
 
 //            boolean useBlockModelConfig = Configs.Visuals.SCHEMATIC_VERIFIER_BLOCK_MODELS.getBooleanValue();
             boolean useBlockModelConfig = false;
@@ -302,7 +302,7 @@ public class WidgetSchematicVerificationResult extends WidgetListEntrySortable<B
 
             if (this.mismatchEntry.mismatchType != MismatchType.CORRECT_STATE)
             {
-                RenderUtils.drawRect(ctx, x2, y, 16, 16, 0x20FFFFFF); // light background for the item
+                RenderUtils.drawRect(ctx, x2, y, 16, 16, 0xFF121C28); // light background for the item
 
                 if (useBlockModelFound && RenderUtils.stateModelHasQuads(this.mismatchInfo.stateFound))
                 {
