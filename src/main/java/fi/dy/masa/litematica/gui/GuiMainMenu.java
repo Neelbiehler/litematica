@@ -32,13 +32,17 @@ public class GuiMainMenu extends GuiBase
         int y = 30;
         int width = this.getButtonWidth();
 
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PLACEMENTS);
+        this.addSectionLabel(x, y, "build");
+        y += 14;
+        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOAD_SCHEMATICS);
         y += 22;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS);
         y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOAD_SCHEMATICS);
-        y += 44;
+        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PLACEMENTS);
+        y += 28;
 
+        this.addSectionLabel(x, y, "create");
+        y += 14;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
         y += 22;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
@@ -47,6 +51,7 @@ public class GuiMainMenu extends GuiBase
         SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
         String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
         ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
+        button.setHoverStrings("litematica.gui.main_menu.help.area_mode");
         this.addButton(button, new ButtonListenerCycleAreaMode(this));
 
         label = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
@@ -54,13 +59,13 @@ public class GuiMainMenu extends GuiBase
 
         y = this.getScreenHeight() - 26;
         button = new ButtonGeneric(x, y, width2, 20, label);
+        button.setHoverStrings("litematica.gui.main_menu.help.tool_mode");
         this.addButton(button, new ButtonListenerCycleToolMode(this));
 
         x += width + 20;
         y = 30;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.CONFIGURATION);
-        y += 88;
-
+        this.addSectionLabel(x, y, "manage");
+        y += 14;
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_MANAGER);
         y += 22;
 
@@ -71,6 +76,17 @@ public class GuiMainMenu extends GuiBase
             y += 22;
             this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
         }
+
+        y += 28;
+        this.addSectionLabel(x, y, "settings");
+        y += 14;
+        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.CONFIGURATION);
+    }
+
+    private void addSectionLabel(int x, int y, String section)
+    {
+        this.addLabel(x, y, -1, 12, 0xFF80CBC4,
+                      StringUtils.translate("litematica.gui.main_menu.section." + section));
     }
 
     private void createChangeMenuButton(int x, int y, int width, ButtonListenerChangeMenu.ButtonType type)
@@ -86,6 +102,10 @@ public class GuiMainMenu extends GuiBase
         else if (type == ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER)
         {
             button.setHoverStrings("litematica.gui.button.hover.schematic_projects.menu_warning");
+        }
+        else
+        {
+            button.setHoverStrings(type.getLabelKey() + ".help");
         }
 
         this.addButton(button, new ButtonListenerChangeMenu(type, this));

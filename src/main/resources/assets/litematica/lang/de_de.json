@@ -1,0 +1,16 @@
+{
+    "litematica.gui.button.change_menu.area_editor.help": "Lege den Bereich deines Bauwerks fest und speichere ihn\nals Vorlage.",
+    "litematica.gui.button.change_menu.configuration_menu.help": "Passe Darstellung, Verhalten und Tastenkürzel an.",
+    "litematica.gui.button.change_menu.load_schematics_to_memory.help": "Hier starten: Wähle eine Vorlagendatei. Aktiviere\nPlatzierung erstellen, um sie in deiner Welt\nanzuzeigen.",
+    "litematica.gui.button.change_menu.schematic_manager.help": "Verwalte Vorlagendateien, bearbeite ihre Metadaten oder\nkonvertiere Formate.",
+    "litematica.gui.button.change_menu.show_area_selections.help": "Erstelle, wähle und verwalte gespeicherte\nBereichsauswahlen für deine Bauwerke.",
+    "litematica.gui.button.change_menu.show_loaded_schematics.help": "Bereits geladene Vorlagen: Erstelle Platzierungen oder\nentlade nicht mehr benötigte Vorlagen.",
+    "litematica.gui.button.change_menu.show_schematic_placements.help": "Verwalte die Platzierungen deiner Vorlagen in der Welt:\nverschieben, drehen oder ausblenden.",
+    "litematica.gui.button.change_menu.task_manager.help": "Zeige laufende Aufgaben an und stoppe sie bei Bedarf.",
+    "litematica.gui.main_menu.help.area_mode": "Klicken zum Wechseln: Einfach (ein Quader) oder Normal\n(mehrere Quader).",
+    "litematica.gui.main_menu.help.tool_mode": "Ändert die Werkzeugfunktion. Linksklick: nächster\nModus. Rechtsklick: vorheriger Modus.",
+    "litematica.gui.main_menu.section.build": "Nach Vorlage bauen",
+    "litematica.gui.main_menu.section.create": "Vorlage erstellen",
+    "litematica.gui.main_menu.section.manage": "Dateien und Aufgaben",
+    "litematica.gui.main_menu.section.settings": "Einstellungen"
+}
