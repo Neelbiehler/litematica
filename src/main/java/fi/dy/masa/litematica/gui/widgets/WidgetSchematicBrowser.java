@@ -56,7 +56,7 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     @Override
     protected int getBrowserWidthForTotalWidth(int width)
     {
-        return super.getBrowserWidthForTotalWidth(width) - this.infoWidth;
+        return super.getBrowserWidthForTotalWidth(width) - (width >= 480 ? this.infoWidth : 0);
     }
 
     @Override
@@ -82,7 +82,10 @@ public class WidgetSchematicBrowser extends WidgetFileBrowserBase
     @Override
     protected void drawAdditionalContents(GuiContext ctx, int mouseX, int mouseY)
     {
-        this.drawSelectedSchematicInfo(ctx, this.getLastSelectedEntry());
+        if (this.totalWidth >= 480)
+        {
+            this.drawSelectedSchematicInfo(ctx, this.getLastSelectedEntry());
+        }
     }
 
     protected void drawSelectedSchematicInfo(GuiContext ctx, @Nullable DirectoryEntry entry)

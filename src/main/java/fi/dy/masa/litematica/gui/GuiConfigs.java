@@ -24,6 +24,7 @@ public class GuiConfigs extends GuiConfigsBase implements IConfigGuiAllTab
     public GuiConfigs()
     {
         super(10, 50, Reference.MOD_ID, null, "litematica.gui.title.configs", String.format("%s", Reference.MOD_VERSION));
+        this.useTitleHierarchy = false;
     }
 
     @Override
@@ -79,18 +80,18 @@ public class GuiConfigs extends GuiConfigsBase implements IConfigGuiAllTab
 
         if (tab == ConfigGuiTab.INFO_OVERLAYS)
         {
-            return 140;
+            return Math.min(140, this.getScreenWidth() / 3);
         }
         else if (tab == ConfigGuiTab.GENERIC || tab == ConfigGuiTab.VISUALS)
         {
-            return 180;
+            return Math.min(180, this.getScreenWidth() / 3);
         }
         else if (tab == ConfigGuiTab.COLORS)
         {
             return 100;
         }
 
-        return super.getConfigWidth();
+        return Math.min(super.getConfigWidth(), this.getScreenWidth() / 3);
     }
 
     @Override

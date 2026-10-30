@@ -15,11 +15,9 @@ import fi.dy.masa.malilib.gui.GuiStringListSelection;
 import fi.dy.masa.malilib.gui.GuiTextInputFeedback;
 import fi.dy.masa.malilib.gui.Message.MessageType;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
-import fi.dy.masa.malilib.gui.button.ButtonGeneric;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.gui.interfaces.ISelectionListener;
 import fi.dy.masa.malilib.gui.interfaces.IStringListConsumer;
-import fi.dy.masa.malilib.gui.widgets.WidgetCheckBox;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase;
 import fi.dy.masa.malilib.gui.widgets.WidgetFileBrowserBase.DirectoryEntry;
 import fi.dy.masa.malilib.interfaces.IStringConsumerFeedback;
@@ -33,6 +31,8 @@ import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
 import fi.dy.masa.litematica.gui.GuiMainMenu.ButtonListenerChangeMenu;
 import fi.dy.masa.litematica.gui.widgets.WidgetSchematicBrowser;
+import fi.dy.masa.litematica.gui.widgets.WidgetDashboardButton;
+import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.litematica.materials.MaterialListCustom;
 import fi.dy.masa.litematica.materials.MaterialListSchematic;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
@@ -45,7 +45,7 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase implements ISelect
 {
     public GuiSchematicLoad()
     {
-        super(12, 24);
+        super(12, 52);
 
         this.title = StringUtils.translate("litematica.gui.title.load_schematic");
     }
@@ -76,79 +76,55 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase implements ISelect
         this.createButtons();
     }
 
-	private void createButtons()
-	{
-		int x = 12;
-		int y = this.getScreenHeight() - 40;
-		int buttonWidth;
-		String label;
-		ButtonGeneric button;
-
-		label = StringUtils.translate("litematica.gui.label.schematic_load.checkbox.create_placement");
-		String hover = StringUtils.translate("litematica.gui.label.schematic_load.hoverinfo.create_placement");
-		WidgetCheckBox checkbox = new WidgetCheckBox(x, y, Icons.CHECKBOX_UNSELECTED, Icons.CHECKBOX_SELECTED, label, hover);
-		checkbox.setListener(new CheckboxListener());
-		checkbox.setChecked(DataManager.getCreatePlacementOnLoad(), false);
-		this.addWidget(checkbox);
-
-		DirectoryEntry selected = this.getListWidget().getLastSelectedEntry();
-
-		y = this.getScreenHeight() - 26;
-
-		if (this.getListWidget() == null) return;
-		if (selected != null)
-		{
-			FileType type = FileType.fromFile(selected.getFullPath());
-
-			if (type == FileType.LITEMATICA_SCHEMATIC || type == FileType.SPONGE_SCHEMATIC ||
-				type == FileType.SCHEMATICA_SCHEMATIC || type == FileType.VANILLA_STRUCTURE)
-			{
-				x += this.createButton(x, y, -1, ButtonListener.Type.LOAD_SCHEMATIC) + 4;
-				x += this.createButton(x, y, -1, ButtonListener.Type.MATERIAL_LIST) + 4;
-				x += this.createButton(x, y, -1, ButtonListener.Type.RENAME_SCHEMATIC) + 4;
-				x += this.createButton(x, y, -1, ButtonListener.Type.RENAME_FILE) + 4;
-			}
-			else if (type == FileType.TEXT || type == FileType.JSON)
-			{
-				x += this.createButton(x, y, -1, ButtonListener.Type.MATERIAL_LIST) + 4;
-				x += this.createButton(x, y, -1, ButtonListener.Type.RENAME_FILE) + 4;
-			}
-		}
-
-		ButtonListenerChangeMenu.ButtonType type = ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS;
-		label = StringUtils.translate(type.getLabelKey());
-		buttonWidth = this.getStringWidth(label) + 30;
-		button = new ButtonGeneric(x, y, buttonWidth, 20, label, type.getIcon());
-		this.addButton(button, new ButtonListenerChangeMenu(type, this.getParent()));
-
-		type = ButtonListenerChangeMenu.ButtonType.MAIN_MENU;
-		label = StringUtils.translate(type.getLabelKey());
-		buttonWidth = this.getStringWidth(label) + 20;
-		x = this.getScreenWidth() - buttonWidth - 10;
-		button = new ButtonGeneric(x, y, buttonWidth, 20, label);
-		this.addButton(button, new ButtonListenerChangeMenu(type, this.getParent()));
-	}
-
-    private int createButton(int x, int y, int width, ButtonListener.Type type)
+    @Override
+    protected int getBrowserHeight()
     {
-        ButtonListener listener = new ButtonListener(type, this);
-        String label = StringUtils.translate(type.getTranslationKey());
+        return this.getScreenHeight() - 116;
+    }
 
-        if (width == -1)
+    @Override
+    protected void drawTitle(GuiContext ctx, int mouseX, int mouseY, float partialTicks)
+    {
+        this.drawString(ctx, StringUtils.translate("litematica.gui.flow.choose"), 12, 12, UiTheme.TEXT);
+        String hint = StringUtils.translate("litematica.gui.flow.choose.help");
+        this.drawString(ctx, this.font.plainSubstrByWidth(hint, this.getScreenWidth() - 24), 12, 30, UiTheme.MUTED);
+    }
+
+    private void createButtons()
+    {
+        DirectoryEntry entry = this.getListWidget().getLastSelectedEntry();
+        FileType fileType = entry != null && Files.isRegularFile(entry.getFullPath()) ? FileType.fromFile(entry.getFullPath()) : null;
+        boolean schematic = fileType == FileType.LITEMATICA_SCHEMATIC || fileType == FileType.SPONGE_SCHEMATIC ||
+                            fileType == FileType.SCHEMATICA_SCHEMATIC || fileType == FileType.VANILLA_STRUCTURE;
+        boolean material = schematic || fileType == FileType.TEXT || fileType == FileType.JSON;
+        int width = (this.getScreenWidth() - 32) / 3;
+        int y = this.getScreenHeight() - 52;
+        this.addLoadAction(12, y, width, "place", ButtonListener.Type.LOAD_AND_PLACE, schematic && this.mc.player != null, true);
+        this.addLoadAction(16 + width, y, width, "load_only", ButtonListener.Type.LOAD_SCHEMATIC, schematic, false);
+        this.addLoadAction(20 + width * 2, y, width, "materials", ButtonListener.Type.MATERIAL_LIST, material, false);
+        y += 26;
+        ButtonListenerChangeMenu.ButtonType[] targets = {
+                ButtonListenerChangeMenu.ButtonType.SCHEMATIC_MANAGER,
+                ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS,
+                ButtonListenerChangeMenu.ButtonType.MAIN_MENU };
+        String[] keys = { "files", "loaded", "home" };
+        for (int i = 0; i < targets.length; ++i)
         {
-            width = this.getStringWidth(label) + 10;
+            WidgetDashboardButton button = new WidgetDashboardButton(12 + i * (width + 4), y, width, 20,
+                    StringUtils.translate("litematica.gui.flow." + keys[i]), "", false);
+            this.addButton(button, new ButtonListenerChangeMenu(targets[i], this.getParent()));
         }
+    }
 
-        ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
-
-        if (type == ButtonListener.Type.MATERIAL_LIST)
-        {
-            button.setHoverStrings(StringUtils.translate("litematica.gui.button.hover.material_list_shift_to_select_sub_regions"));
-        }
-
-        this.addButton(button, listener);
-
-        return width;
+    private void addLoadAction(int x, int y, int width, String key, ButtonListener.Type type, boolean enabled, boolean primary)
+    {
+        WidgetDashboardButton button = new WidgetDashboardButton(x, y, width, 22,
+                StringUtils.translate("litematica.gui.flow." + key), "", primary);
+        button.setEnabled(enabled);
+        button.setHoverStrings("litematica.gui.flow." + key + ".help");
+        if (!enabled) button.setHoverStrings(this.mc.player == null && type == ButtonListener.Type.LOAD_AND_PLACE
+                ? "litematica.gui.flow.enter_world" : "litematica.gui.flow.select_file");
+        this.addButton(button, new ButtonListener(type, this));
     }
 
 	@Override
@@ -270,22 +246,25 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase implements ISelect
 
 				if (schematic != null)
 				{
-					if (this.type == Type.LOAD_SCHEMATIC)
+					if (this.type == Type.LOAD_SCHEMATIC || this.type == Type.LOAD_AND_PLACE)
 					{
 						SchematicHolder.getInstance().addSchematic(schematic, true);
 						this.gui.addMessage(MessageType.SUCCESS, "litematica.info.schematic_load.schematic_loaded", file.getFileName());
 
-						if (DataManager.getCreatePlacementOnLoad() && this.gui.mc.player != null)
+						if (this.type == Type.LOAD_AND_PLACE && this.gui.mc.player != null)
 						{
 							BlockPos pos = BlockPos.containing(this.gui.mc.player.position());
 							String name = schematic.getMetadata().getName();
-							boolean enabled = GuiBase.isShiftDown() == false;
+							boolean enabled = true;
 
 							SchematicPlacementManager manager = DataManager.getSchematicPlacementManager();
 							SchematicPlacement placement
 									= SchematicPlacement.createFor(schematic, pos, name, enabled, enabled);
 							manager.addSchematicPlacement(placement, true);
 							manager.setSelectedSchematicPlacement(placement);
+                            GuiPlacementWorkspace workspace = new GuiPlacementWorkspace(placement);
+                            workspace.setParent(this.gui);
+                            GuiBase.openGui(workspace);
 						}
 					}
 					else if (this.type == Type.MATERIAL_LIST)
@@ -360,7 +339,8 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase implements ISelect
 
 		public enum Type
 		{
-			LOAD_SCHEMATIC      ("litematica.gui.button.load_schematic_to_memory"),
+			LOAD_AND_PLACE      ("litematica.gui.flow.place"),
+            LOAD_SCHEMATIC      ("litematica.gui.button.load_schematic_to_memory"),
 			MATERIAL_LIST       ("litematica.gui.button.material_list"),
 			RENAME_SCHEMATIC    ("litematica.gui.button.rename_schematic"),
 			RENAME_FILE         ("litematica.gui.button.rename_file"),
@@ -379,16 +359,6 @@ public class GuiSchematicLoad extends GuiSchematicBrowserBase implements ISelect
 			}
 		}
 	}
-
-    private static class CheckboxListener implements ISelectionListener<WidgetCheckBox>
-    {
-        @Override
-        public void onSelectionChange(WidgetCheckBox entry)
-        {
-            if (entry == null) return;
-            DataManager.setCreatePlacementOnLoad(entry.isChecked());
-        }
-    }
 
 	private record MaterialListCreator(LitematicaSchematic schematic) implements IStringListConsumer
 	{

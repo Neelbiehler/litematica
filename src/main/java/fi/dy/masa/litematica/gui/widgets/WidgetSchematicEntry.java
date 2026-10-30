@@ -21,6 +21,7 @@ import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.data.SchematicHolder;
 import fi.dy.masa.litematica.gui.GuiSchematicSave;
 import fi.dy.masa.litematica.gui.Icons;
+import fi.dy.masa.litematica.gui.GuiPlacementWorkspace;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
@@ -42,7 +43,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
         this.parent = parent;
         this.schematic = schematic;
         this.isOdd = isOdd;
-        y += 1;
+        y += width < 480 ? 24 : 4;
 
         int posX = x + width;
 
@@ -53,13 +54,16 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
 
         this.buttonsStartX = posX;
         this.typeIconX = this.x + 2;
-        this.typeIconY = y + 4;
+        this.typeIconY = this.y + 5;
     }
 
     private int addButton(int x, int y, ButtonListener.Type type)
     {
         ButtonListener listener = new ButtonListener(type, this);
-        ButtonGeneric button = new ButtonGeneric(x, y, -1, true, type.getDisplayName());
+        String label = this.width < 480 ? StringUtils.translate("litematica.gui.library." + type.name().toLowerCase(java.util.Locale.ROOT)) : type.getDisplayName();
+        int width = this.width < 480 ? (this.width - 8) / 4 : -1;
+        ButtonGeneric button = new ButtonGeneric(x, y, width, true, label);
+        button.setHoverStrings(type.getDisplayName());
 
         if (type.getHoverKey() != null)
         {
@@ -77,22 +81,24 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
         // Draw a lighter background for the hovered and the selected entry
         if (selected || this.isMouseOver(mouseX, mouseY))
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0x70FFFFFF);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF2B3B4B);
         }
         else if (this.isOdd)
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0x20FFFFFF);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF121C28);
         }
         // Draw a slightly lighter background for even entries
         else
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0x50FFFFFF);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF1C2937);
         }
 
         boolean modified = this.schematic.getMetadata().wasModifiedSinceSaved();
         String schematicName = this.schematic.getMetadata().getName();
         int color = modified ? 0xFFFF9010 : 0xFFFFFFFF;
-        this.drawString(ctx, this.x + 20, this.y + 7, color, schematicName);
+        int nameWidth = this.width < 480 ? this.width - 40 : this.buttonsStartX - this.x - 36;
+        this.drawString(ctx, this.x + 20, this.y + 7, color,
+                        this.textRenderer.plainSubstrByWidth(schematicName, Math.max(0, nameWidth)));
 
         Path schematicFile = this.schematic.getFile();
         String fileName = schematicFile != null ? schematicFile.getFileName().toString() : null;
@@ -111,7 +117,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
 
         if (modified)
         {
-            Icons.NOTICE_EXCLAMATION_11.renderAt(ctx, this.buttonsStartX - 13, this.y + 6, this.zLevel, false, false);
+            Icons.NOTICE_EXCLAMATION_11.renderAt(ctx, (this.width < 480 ? this.x + this.width - 14 : this.buttonsStartX - 13), this.y + 6, this.zLevel, false, false);
         }
 
         this.drawSubWidgets(ctx, mouseX, mouseY);
@@ -121,13 +127,13 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
     public void postRenderHovered(GuiContext ctx, int mouseX, int mouseY, boolean selected)
     {
         if (this.schematic.getMetadata().wasModifiedSinceSaved() &&
-            GuiBase.isMouseOver(mouseX, mouseY, this.buttonsStartX - 13, this.y + 6, 11, 11))
+            GuiBase.isMouseOver(mouseX, mouseY, (this.width < 480 ? this.x + this.width - 14 : this.buttonsStartX - 13), this.y + 6, 11, 11))
         {
             String str = WidgetFileBrowserBase.DATE_FORMAT.format(new Date(this.schematic.getMetadata().getTimeModified()));
             List<String> strs = ImmutableList.of(StringUtils.translate("litematica.gui.label.loaded_schematic.modified_on", str));
             RenderUtils.drawHoverText(ctx, mouseX, mouseY, strs);
         }
-        else if (GuiBase.isMouseOver(mouseX, mouseY, this.x, this.y, this.buttonsStartX - 12, this.height))
+        else if (GuiBase.isMouseOver(mouseX, mouseY, this.x, this.y, (this.width < 480 ? this.width - 12 : this.buttonsStartX - this.x - 12), this.width < 480 ? 22 : this.height))
         {
             List<String> lines = new ArrayList<>();
             Path schematicFile = this.schematic.getFile();
@@ -165,6 +171,9 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
 				SchematicPlacement placement = SchematicPlacement.createFor(entry, pos, name, enabled, enabled);
 				manager.addSchematicPlacement(placement, true);
 				manager.setSelectedSchematicPlacement(placement);
+                GuiPlacementWorkspace workspace = new GuiPlacementWorkspace(placement);
+                workspace.setParent(GuiUtils.getCurrentScreen());
+                GuiBase.openGui(workspace);
 			}
 			else if (this.type == Type.SAVE_TO_FILE)
 			{

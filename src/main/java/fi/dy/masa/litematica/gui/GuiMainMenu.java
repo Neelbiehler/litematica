@@ -1,10 +1,6 @@
 package fi.dy.masa.litematica.gui;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.annotation.Nullable;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import fi.dy.masa.litematica.Reference;
@@ -22,11 +18,10 @@ import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.input.ScanCodes;
 
-public class GuiMainMenu extends GuiBase
+public class GuiMainMenu extends GuiWorkflowBase
 {
-    private final List<WidgetDashboardButton> dashboardButtons = new ArrayList<>();
-    private Section section = Section.BUILD;
-    private int focusedIndex = -1;
+    private static Section lastSection = Section.BUILD;
+    private Section section = lastSection;
     private int panelX;
     private int panelY;
     private int panelWidth;
@@ -42,7 +37,6 @@ public class GuiMainMenu extends GuiBase
     public void initGui()
     {
         super.initGui();
-        this.dashboardButtons.clear();
         this.panelWidth = Math.min(840, this.getScreenWidth() - 24);
         this.panelHeight = Math.min(440, this.getScreenHeight() - 24);
         this.panelX = (this.getScreenWidth() - this.panelWidth) / 2;
@@ -58,6 +52,7 @@ public class GuiMainMenu extends GuiBase
             this.addDashboardButton(this.panelX + 8, y, this.sidebarWidth - 16, 26,
                     text("nav." + item.key), "", this.section == item, (button, mouseButton) -> {
                         this.section = item;
+                        lastSection = item;
                         this.initGui();
                     });
             y += 32;
@@ -83,7 +78,7 @@ public class GuiMainMenu extends GuiBase
                 break;
             case CREATE:
                 this.createAction(contentX, y, contentWidth, cardHeight, "select", true,
-                                  ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
+                                  ButtonListenerChangeMenu.ButtonType.CAPTURE);
                 this.createAction(contentX, y + cardHeight + 6, contentWidth, cardHeight, "selections", false,
                                   ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
                 SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
@@ -116,15 +111,6 @@ public class GuiMainMenu extends GuiBase
         this.updateKeyboardFocus();
     }
 
-    private WidgetDashboardButton addDashboardButton(int x, int y, int width, int height, String title,
-            String description, boolean accent, IButtonActionListener listener)
-    {
-        WidgetDashboardButton button = new WidgetDashboardButton(x, y, width, height, title, description, accent);
-        this.dashboardButtons.add(button);
-        this.addButton(button, listener);
-        return button;
-    }
-
     private void createAction(int x, int y, int width, int height, String key, boolean primary,
                               ButtonListenerChangeMenu.ButtonType type)
     {
@@ -139,6 +125,10 @@ public class GuiMainMenu extends GuiBase
         else if (type == ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER)
         {
             button.setHoverStrings("litematica.gui.button.hover.schematic_projects.menu_warning");
+        }
+        else if (type == ButtonListenerChangeMenu.ButtonType.CAPTURE)
+        {
+            button.setHoverStrings("litematica.gui.capture.first.help");
         }
         else
         {
@@ -171,17 +161,6 @@ public class GuiMainMenu extends GuiBase
         this.drawFittedLabel(ctx, subtitle, x, this.panelY + 30, width, 0xFFB1C0CF);
     }
 
-    @Override
-    protected void drawButtonHoverTexts(GuiContext ctx, int mouseX, int mouseY, float partialTicks)
-    {
-        super.drawButtonHoverTexts(ctx, mouseX, mouseY, partialTicks);
-        if (this.shouldRenderHoverStuff() && this.focusedIndex >= 0 &&
-            this.dashboardButtons.stream().noneMatch(WidgetDashboardButton::isMouseOver))
-        {
-            this.dashboardButtons.get(this.focusedIndex).drawKeyboardHelp(ctx);
-        }
-    }
-
     private void drawFittedLabel(GuiContext ctx, String label, int x, int y, int width, int color)
     {
         if (this.getStringWidth(label) > width)
@@ -189,49 +168,6 @@ public class GuiMainMenu extends GuiBase
             label = this.font.plainSubstrByWidth(label, Math.max(0, width - this.getStringWidth("..."))) + "...";
         }
         this.drawString(ctx, label, x, y, color);
-    }
-
-    @Override
-    public boolean onKeyTyped(KeyEvent input)
-    {
-        if (input.key() == ScanCodes.SCAN_TAB)
-        {
-            int direction = input.hasShiftDown() ? -1 : 1;
-            if (this.focusedIndex < 0)
-            {
-                this.focusedIndex = direction > 0 ? -1 : 0;
-            }
-            do
-            {
-                this.focusedIndex = Math.floorMod(this.focusedIndex + direction, this.dashboardButtons.size());
-            }
-            while (this.dashboardButtons.get(this.focusedIndex).isEnabled() == false);
-            this.updateKeyboardFocus();
-            return true;
-        }
-        if (this.focusedIndex >= 0 && (input.key() == ScanCodes.SCAN_RETURN ||
-            input.key() == ScanCodes.SCAN_KP_ENTER || input.key() == ScanCodes.SCAN_SPACE))
-        {
-            this.dashboardButtons.get(this.focusedIndex).activate(input.hasShiftDown());
-            return true;
-        }
-        return super.onKeyTyped(input);
-    }
-
-    @Override
-    public boolean onMouseClicked(MouseButtonEvent click, boolean doubleClick)
-    {
-        this.focusedIndex = -1;
-        this.updateKeyboardFocus();
-        return super.onMouseClicked(click, doubleClick);
-    }
-
-    private void updateKeyboardFocus()
-    {
-        for (int i = 0; i < this.dashboardButtons.size(); ++i)
-        {
-            this.dashboardButtons.get(i).setKeyboardFocused(i == this.focusedIndex);
-        }
     }
 
     private static String text(String key)
@@ -270,6 +206,9 @@ public class GuiMainMenu extends GuiBase
 
             switch (this.type)
             {
+                case CAPTURE:
+                    gui = new GuiCaptureWorkspace();
+                    break;
                 case AREA_EDITOR:
                     gui = DataManager.getSelectionManager().getEditGui();
                     break;
@@ -277,7 +216,7 @@ public class GuiMainMenu extends GuiBase
                     gui = new GuiAreaSelectionManager();
                     break;
                 case CONFIGURATION:
-                    gui = new GuiConfigs();
+                    gui = new GuiPreferences();
                     break;
                 case LOAD_SCHEMATICS:
                     gui = new GuiSchematicLoad();
@@ -311,6 +250,7 @@ public class GuiMainMenu extends GuiBase
 
         public enum ButtonType
         {
+            CAPTURE                    ("litematica.gui.dashboard.select.title", ButtonIcons.AREA_EDITOR),
             // List loaded Schematics in SchematicHolder
             LOADED_SCHEMATICS           ("litematica.gui.button.change_menu.show_loaded_schematics", ButtonIcons.LOADED_SCHEMATICS),
             // List Schematics placements

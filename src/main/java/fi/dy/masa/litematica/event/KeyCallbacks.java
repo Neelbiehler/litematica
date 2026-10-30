@@ -358,7 +358,7 @@ public class KeyCallbacks
                 }
                 else
                 {
-                    GuiBase.openGui(new GuiConfigs());
+                    GuiBase.openGui(new GuiPreferences());
                 }
 
                 return true;
@@ -377,7 +377,7 @@ public class KeyCallbacks
                     }
                     else
                     {
-                        GuiBase.openGui(new GuiPlacementConfiguration(schematicPlacement));
+                        GuiBase.openGui(new GuiPlacementWorkspace(schematicPlacement));
                     }
                 }
                 else

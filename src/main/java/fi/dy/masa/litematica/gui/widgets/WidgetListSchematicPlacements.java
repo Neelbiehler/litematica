@@ -32,6 +32,12 @@ public class WidgetListSchematicPlacements extends WidgetListBase<SchematicPlace
     }
 
     @Override
+    protected int getBrowserEntryHeightFor(SchematicPlacement entry)
+    {
+        return this.browserEntryWidth < 480 ? 48 : 28;
+    }
+
+    @Override
     protected Collection<SchematicPlacement> getAllEntries()
     {
         return DataManager.getSchematicPlacementManager().getAllSchematicsPlacements();

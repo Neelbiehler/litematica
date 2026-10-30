@@ -26,6 +26,12 @@ public class WidgetListLoadedSchematics extends WidgetListBase<LitematicaSchemat
     }
 
     @Override
+    protected int getBrowserEntryHeightFor(LitematicaSchematic entry)
+    {
+        return this.browserEntryWidth < 480 ? 48 : 28;
+    }
+
+    @Override
     protected Collection<LitematicaSchematic> getAllEntries()
     {
         return SchematicHolder.getInstance().getAllSchematics();

@@ -18,7 +18,7 @@ import fi.dy.masa.malilib.gui.widgets.WidgetListEntryBase;
 import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.litematica.data.DataManager;
-import fi.dy.masa.litematica.gui.GuiPlacementConfiguration;
+import fi.dy.masa.litematica.gui.GuiPlacementWorkspace;
 import fi.dy.masa.litematica.gui.Icons;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
@@ -42,7 +42,7 @@ public class WidgetSchematicPlacement extends WidgetListEntryBase<SchematicPlace
         this.manager = DataManager.getSchematicPlacementManager();
 
         int posX = x + width - 2;
-        int posY = y + 1;
+        int posY = y + (width < 480 ? 24 : 4);
 
         // Note: These are placed from right to left
 
@@ -55,19 +55,19 @@ public class WidgetSchematicPlacement extends WidgetListEntryBase<SchematicPlace
 
     public int createButtonGeneric(int xRight, int y, ButtonListener.ButtonType type)
     {
-        return this.addButton(new ButtonGeneric(xRight, y, -1, true, type.getDisplayName()), new ButtonListener(type, this)).getX() - 1;
+        return this.addButton(new ButtonGeneric(xRight, y, this.width < 480 ? (this.width - 10) / 3 : -1, true, type.getDisplayName()), new ButtonListener(type, this)).getX() - 1;
     }
 
     public int createButtonOnOff(int xRight, int y, boolean isCurrentlyOn, ButtonListener.ButtonType type)
     {
-        ButtonOnOff button = new ButtonOnOff(xRight, y, -1, true, type.getTranslationKey(), isCurrentlyOn);
+        ButtonOnOff button = new ButtonOnOff(xRight, y, this.width < 480 ? (this.width - 10) / 3 : -1, true, type.getTranslationKey(), isCurrentlyOn);
         return this.addButton(button, new ButtonListener(type, this)).getX() - 2;
     }
 
     @Override
     public boolean canSelectAt(MouseButtonEvent click)
     {
-        return click.x() < this.buttonsStartX && super.canSelectAt(click);
+        return (this.width < 480 ? click.y() < this.y + 24 : click.x() < this.buttonsStartX) && super.canSelectAt(click);
     }
 
     @Override
@@ -78,16 +78,16 @@ public class WidgetSchematicPlacement extends WidgetListEntryBase<SchematicPlace
         // Draw a lighter background for the hovered and the selected entry
         if (selected || placementSelected || this.isMouseOver(mouseX, mouseY))
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0707070);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF2B3B4B);
         }
         else if (this.isOdd)
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0101010);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF121C28);
         }
         // Draw a slightly lighter background for even entries
         else
         {
-            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xA0303030);
+            RenderUtils.drawRect(ctx, this.x, this.y, this.width, this.height, 0xFF1C2937);
         }
 
         if (placementSelected)
@@ -97,7 +97,9 @@ public class WidgetSchematicPlacement extends WidgetListEntryBase<SchematicPlace
 
         String name = this.placement.getName();
         String pre = this.placement.isEnabled() ? GuiBase.TXT_GREEN : GuiBase.TXT_RED;
-        this.drawString(ctx, this.x + 20, this.y + 7, 0xFFFFFFFF, pre + name);
+        int nameWidth = this.width < 480 ? this.width - 52 : this.buttonsStartX - this.x - 50;
+        this.drawString(ctx, this.x + 20, this.y + 7, 0xFFFFFFFF,
+                        pre + this.textRenderer.plainSubstrByWidth(name, Math.max(0, nameWidth)));
 
         Icons icon;
 
@@ -115,13 +117,13 @@ public class WidgetSchematicPlacement extends WidgetListEntryBase<SchematicPlace
         if (this.placement.isRegionPlacementModified())
         {
             icon = Icons.NOTICE_EXCLAMATION_11;
-            icon.renderAt(ctx, this.buttonsStartX - 13, this.y + 6, this.zLevel, false, false);
+            icon.renderAt(ctx, (this.width < 480 ? this.x + this.width - 14 : this.buttonsStartX - 13), this.y + 6, this.zLevel, false, false);
         }
 
         if (this.placement.isLocked())
         {
             icon = Icons.LOCK_LOCKED;
-            icon.renderAt(ctx, this.buttonsStartX - 26, this.y + 6, this.zLevel, false, false);
+            icon.renderAt(ctx, (this.width < 480 ? this.x + this.width - 27 : this.buttonsStartX - 26), this.y + 6, this.zLevel, false, false);
         }
 
         super.render(ctx, mouseX, mouseY, placementSelected);
@@ -131,18 +133,18 @@ public class WidgetSchematicPlacement extends WidgetListEntryBase<SchematicPlace
     public void postRenderHovered(GuiContext ctx, int mouseX, int mouseY, boolean selected)
     {
         if (this.placement.isLocked() &&
-            GuiBase.isMouseOver(mouseX, mouseY, this.x + this.buttonsStartX - 38, this.y + 6, 11, 11))
+            GuiBase.isMouseOver(mouseX, mouseY, (this.width < 480 ? this.x + this.width - 27 : this.buttonsStartX - 26), this.y + 6, 11, 11))
         {
             String str = StringUtils.translate("litematica.hud.schematic_placement.hover_info.placement_locked");
             RenderUtils.drawHoverText(ctx, mouseX, mouseY, ImmutableList.of(str));
         }
         else if (this.placement.isRegionPlacementModified() &&
-                 GuiBase.isMouseOver(mouseX, mouseY, this.x + this.buttonsStartX - 25, this.y + 6, 11, 11))
+                 GuiBase.isMouseOver(mouseX, mouseY, (this.width < 480 ? this.x + this.width - 14 : this.buttonsStartX - 13), this.y + 6, 11, 11))
         {
             String str = StringUtils.translate("litematica.hud.schematic_placement.hover_info.placement_modified");
             RenderUtils.drawHoverText(ctx, mouseX, mouseY, ImmutableList.of(str));
         }
-        else if (GuiBase.isMouseOver(mouseX, mouseY, this.x, this.y, this.buttonsStartX - 18, this.height))
+        else if (GuiBase.isMouseOver(mouseX, mouseY, this.x, this.y, (this.width < 480 ? this.width - 18 : this.buttonsStartX - this.x - 18), this.width < 480 ? 22 : this.height))
         {
             Path schematicFile = this.placement.getSchematic().getFile();
             String fileName = schematicFile != null ? schematicFile.getFileName().toString() : StringUtils.translate("litematica.gui.label.schematic_placement.in_memory");
@@ -169,7 +171,7 @@ public class WidgetSchematicPlacement extends WidgetListEntryBase<SchematicPlace
 		{
 			if (this.type == ButtonType.CONFIGURE)
 			{
-				GuiPlacementConfiguration gui = new GuiPlacementConfiguration(this.widget.placement);
+				GuiPlacementWorkspace gui = new GuiPlacementWorkspace(this.widget.placement);
 				gui.setParent(this.widget.parent.getParentGui());
 				GuiBase.openGui(gui);
 			}
