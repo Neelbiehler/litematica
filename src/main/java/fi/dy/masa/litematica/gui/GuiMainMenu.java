@@ -1,98 +1,135 @@
 package fi.dy.masa.litematica.gui;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import fi.dy.masa.litematica.Reference;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.data.SchematicHolder;
+import fi.dy.masa.litematica.gui.widgets.WidgetDashboardButton;
 import fi.dy.masa.litematica.selection.SelectionMode;
 import fi.dy.masa.litematica.tool.ToolMode;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
-import fi.dy.masa.malilib.gui.button.ButtonGeneric;
+import fi.dy.masa.malilib.render.GuiContext;
+import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.input.ScanCodes;
 
 public class GuiMainMenu extends GuiBase
 {
+    private final List<WidgetDashboardButton> dashboardButtons = new ArrayList<>();
+    private Section section = Section.BUILD;
+    private int focusedIndex = -1;
+    private int panelX;
+    private int panelY;
+    private int panelWidth;
+    private int panelHeight;
+    private int sidebarWidth;
+
     public GuiMainMenu()
     {
-        String version = String.format("v%s", Reference.MOD_VERSION);
-        this.title = StringUtils.translate("litematica.gui.title.litematica_main_menu", version);
+        this.title = StringUtils.translate("litematica.gui.title.litematica_main_menu", "v" + Reference.MOD_VERSION);
     }
 
     @Override
     public void initGui()
     {
         super.initGui();
+        this.dashboardButtons.clear();
+        this.panelWidth = Math.min(840, this.getScreenWidth() - 24);
+        this.panelHeight = Math.min(440, this.getScreenHeight() - 24);
+        this.panelX = (this.getScreenWidth() - this.panelWidth) / 2;
+        this.panelY = (this.getScreenHeight() - this.panelHeight) / 2;
+        this.sidebarWidth = this.panelWidth < 460 ? 88 : 128;
+        int contentX = this.panelX + this.sidebarWidth + 12;
+        int contentWidth = this.panelWidth - this.sidebarWidth - 24;
+        int y = this.panelY + 54;
+        int cardHeight = Math.min(68, (this.panelHeight - 108) / 3);
 
-        int x = 12;
-        int y = 30;
-        int width = this.getButtonWidth();
-
-        this.addSectionLabel(x, y, "build");
-        y += 14;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOAD_SCHEMATICS);
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS);
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PLACEMENTS);
-        y += 28;
-
-        this.addSectionLabel(x, y, "create");
-        y += 14;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
-        y += 22;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
-        y += 22;
-
-        SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
-        String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
-        ButtonGeneric button = new ButtonGeneric(x, y, width, 20, label);
-        button.setHoverStrings("litematica.gui.main_menu.help.area_mode");
-        this.addButton(button, new ButtonListenerCycleAreaMode(this));
-
-        label = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
-        int width2 = this.getStringWidth(label) + 10;
-
-        y = this.getScreenHeight() - 26;
-        button = new ButtonGeneric(x, y, width2, 20, label);
-        button.setHoverStrings("litematica.gui.main_menu.help.tool_mode");
-        this.addButton(button, new ButtonListenerCycleToolMode(this));
-
-        x += width + 20;
-        y = 30;
-        this.addSectionLabel(x, y, "manage");
-        y += 14;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_MANAGER);
-        y += 22;
-
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.TASK_MANAGER);
-
-        if (Configs.Generic.UNHIDE_SCHEMATIC_PROJECTS.getBooleanValue())
+        for (Section item : Section.values())
         {
-            y += 22;
-            this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
+            this.addDashboardButton(this.panelX + 8, y, this.sidebarWidth - 16, 26,
+                    text("nav." + item.key), "", this.section == item, (button, mouseButton) -> {
+                        this.section = item;
+                        this.initGui();
+                    });
+            y += 32;
         }
 
-        y += 28;
-        this.addSectionLabel(x, y, "settings");
-        y += 14;
-        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.CONFIGURATION);
+        this.addDashboardButton(this.panelX + 8, y, this.sidebarWidth - 16, 26,
+                text("nav.settings"), "", false,
+                new ButtonListenerChangeMenu(ButtonListenerChangeMenu.ButtonType.CONFIGURATION, this));
+        this.addDashboardButton(this.panelX + 8, this.panelY + this.panelHeight - 34,
+                this.sidebarWidth - 16, 24, text("back"), "", false,
+                (button, mouseButton) -> this.closeGui(true));
+
+        y = this.panelY + 54;
+        switch (this.section)
+        {
+            case BUILD:
+                this.createAction(contentX, y, contentWidth, cardHeight, "load", true,
+                                  ButtonListenerChangeMenu.ButtonType.LOAD_SCHEMATICS);
+                this.createAction(contentX, y + cardHeight + 6, contentWidth, cardHeight, "loaded", false,
+                                  ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS);
+                this.createAction(contentX, y + (cardHeight + 6) * 2, contentWidth, cardHeight, "placements", false,
+                                  ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PLACEMENTS);
+                break;
+            case CREATE:
+                this.createAction(contentX, y, contentWidth, cardHeight, "select", true,
+                                  ButtonListenerChangeMenu.ButtonType.AREA_EDITOR);
+                this.createAction(contentX, y + cardHeight + 6, contentWidth, cardHeight, "selections", false,
+                                  ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER);
+                SelectionMode mode = DataManager.getSelectionManager().getSelectionMode();
+                WidgetDashboardButton areaMode = this.addDashboardButton(contentX, y + (cardHeight + 6) * 2,
+                        contentWidth, cardHeight, StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName()),
+                        text("area_mode.description"), false, new ButtonListenerCycleAreaMode(this));
+                areaMode.setHoverStrings("litematica.gui.main_menu.help.area_mode");
+                break;
+            case MANAGE:
+                this.createAction(contentX, y, contentWidth, cardHeight, "files", false,
+                                  ButtonListenerChangeMenu.ButtonType.SCHEMATIC_MANAGER);
+                this.createAction(contentX, y + cardHeight + 6, contentWidth, cardHeight, "tasks", false,
+                                  ButtonListenerChangeMenu.ButtonType.TASK_MANAGER);
+                if (Configs.Generic.UNHIDE_SCHEMATIC_PROJECTS.getBooleanValue())
+                {
+                    this.createAction(contentX, y + (cardHeight + 6) * 2, contentWidth, cardHeight, "projects", false,
+                                      ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PROJECTS_MANAGER);
+                }
+                break;
+        }
+
+        String toolLabel = StringUtils.translate("litematica.gui.button.tool_mode", DataManager.getToolMode().getName());
+        WidgetDashboardButton toolMode = this.addDashboardButton(contentX, this.panelY + this.panelHeight - 34,
+                contentWidth, 24, toolLabel, "", false, new ButtonListenerCycleToolMode(this));
+        toolMode.setHoverStrings(toolLabel, "litematica.gui.main_menu.help.tool_mode");
+        if (this.focusedIndex >= this.dashboardButtons.size())
+        {
+            this.focusedIndex = -1;
+        }
+        this.updateKeyboardFocus();
     }
 
-    private void addSectionLabel(int x, int y, String section)
+    private WidgetDashboardButton addDashboardButton(int x, int y, int width, int height, String title,
+            String description, boolean accent, IButtonActionListener listener)
     {
-        this.addLabel(x, y, -1, 12, 0xFF80CBC4,
-                      StringUtils.translate("litematica.gui.main_menu.section." + section));
+        WidgetDashboardButton button = new WidgetDashboardButton(x, y, width, height, title, description, accent);
+        this.dashboardButtons.add(button);
+        this.addButton(button, listener);
+        return button;
     }
 
-    private void createChangeMenuButton(int x, int y, int width, ButtonListenerChangeMenu.ButtonType type)
+    private void createAction(int x, int y, int width, int height, String key, boolean primary,
+                              ButtonListenerChangeMenu.ButtonType type)
     {
-        ButtonGeneric button = new ButtonGeneric(x, y, width, 20, type.getDisplayName(), type.getIcon());
-
+        WidgetDashboardButton button = this.addDashboardButton(x, y, width, height, text(key + ".title"),
+                text(key + ".description"), primary, new ButtonListenerChangeMenu(type, this));
         if (type == ButtonListenerChangeMenu.ButtonType.AREA_SELECTION_BROWSER &&
             DataManager.getSchematicProjectsManager().hasProjectOpen())
         {
@@ -107,26 +144,111 @@ public class GuiMainMenu extends GuiBase
         {
             button.setHoverStrings(type.getLabelKey() + ".help");
         }
-
-        this.addButton(button, new ButtonListenerChangeMenu(type, this));
     }
 
-    private int getButtonWidth()
+    @Override
+    protected void drawScreenBackground(GuiContext ctx, int mouseX, int mouseY)
     {
-        int width = 0;
+        RenderUtils.drawRect(ctx, 0, 0, this.getScreenWidth(), this.getScreenHeight(), 0xE80A1018);
+        WidgetDashboardButton.drawSurface(ctx, this.panelX, this.panelY, this.panelWidth, this.panelHeight, 0xFF121C28);
+        RenderUtils.drawRect(ctx, this.panelX + this.sidebarWidth, this.panelY + 12,
+                             1, this.panelHeight - 24, 0xFF2B3949);
+        RenderUtils.drawRect(ctx, this.panelX + 12, this.panelY + 39, 20, 2, 0xFF6EDBC4);
+    }
 
-        for (ButtonListenerChangeMenu.ButtonType type : ButtonListenerChangeMenu.ButtonType.values())
+    @Override
+    protected void drawTitle(GuiContext ctx, int mouseX, int mouseY, float partialTicks)
+    {
+        this.drawString(ctx, "LITEMATICA", this.panelX + 12, this.panelY + 16, 0xFFF1F5F9);
+        int x = this.panelX + this.sidebarWidth + 12;
+        int width = this.panelWidth - this.sidebarWidth - 24;
+        this.drawFittedLabel(ctx, text("heading." + this.section.key), x, this.panelY + 14, width, 0xFFF1F5F9);
+        String subtitle = this.section == Section.BUILD
+                ? StringUtils.translate("litematica.gui.dashboard.status",
+                        SchematicHolder.getInstance().getAllSchematics().size(),
+                        DataManager.getSchematicPlacementManager().getAllSchematicsPlacements().size())
+                : text("intro." + this.section.key);
+        this.drawFittedLabel(ctx, subtitle, x, this.panelY + 30, width, 0xFFB1C0CF);
+    }
+
+    @Override
+    protected void drawButtonHoverTexts(GuiContext ctx, int mouseX, int mouseY, float partialTicks)
+    {
+        super.drawButtonHoverTexts(ctx, mouseX, mouseY, partialTicks);
+        if (this.shouldRenderHoverStuff() && this.focusedIndex >= 0 &&
+            this.dashboardButtons.stream().noneMatch(WidgetDashboardButton::isMouseOver))
         {
-            width = Math.max(width, this.getStringWidth(type.getDisplayName()) + 30);
+            this.dashboardButtons.get(this.focusedIndex).drawKeyboardHelp(ctx);
         }
+    }
 
-        for (SelectionMode mode : SelectionMode.values())
+    private void drawFittedLabel(GuiContext ctx, String label, int x, int y, int width, int color)
+    {
+        if (this.getStringWidth(label) > width)
         {
-            String label = StringUtils.translate("litematica.gui.button.area_selection_mode", mode.getDisplayName());
-            width = Math.max(width, this.getStringWidth(label) + 10);
+            label = this.font.plainSubstrByWidth(label, Math.max(0, width - this.getStringWidth("..."))) + "...";
         }
+        this.drawString(ctx, label, x, y, color);
+    }
 
-        return width;
+    @Override
+    public boolean onKeyTyped(KeyEvent input)
+    {
+        if (input.key() == ScanCodes.SCAN_TAB)
+        {
+            int direction = input.hasShiftDown() ? -1 : 1;
+            if (this.focusedIndex < 0)
+            {
+                this.focusedIndex = direction > 0 ? -1 : 0;
+            }
+            do
+            {
+                this.focusedIndex = Math.floorMod(this.focusedIndex + direction, this.dashboardButtons.size());
+            }
+            while (this.dashboardButtons.get(this.focusedIndex).isEnabled() == false);
+            this.updateKeyboardFocus();
+            return true;
+        }
+        if (this.focusedIndex >= 0 && (input.key() == ScanCodes.SCAN_RETURN ||
+            input.key() == ScanCodes.SCAN_KP_ENTER || input.key() == ScanCodes.SCAN_SPACE))
+        {
+            this.dashboardButtons.get(this.focusedIndex).activate(input.hasShiftDown());
+            return true;
+        }
+        return super.onKeyTyped(input);
+    }
+
+    @Override
+    public boolean onMouseClicked(MouseButtonEvent click, boolean doubleClick)
+    {
+        this.focusedIndex = -1;
+        this.updateKeyboardFocus();
+        return super.onMouseClicked(click, doubleClick);
+    }
+
+    private void updateKeyboardFocus()
+    {
+        for (int i = 0; i < this.dashboardButtons.size(); ++i)
+        {
+            this.dashboardButtons.get(i).setKeyboardFocused(i == this.focusedIndex);
+        }
+    }
+
+    private static String text(String key)
+    {
+        return StringUtils.translate("litematica.gui.dashboard." + key);
+    }
+
+    private enum Section
+    {
+        BUILD("build"), CREATE("create"), MANAGE("manage");
+
+        private final String key;
+
+        Section(String key)
+        {
+            this.key = key;
+        }
     }
 
     public static class ButtonListenerChangeMenu implements IButtonActionListener
@@ -155,8 +277,8 @@ public class GuiMainMenu extends GuiBase
                     gui = new GuiAreaSelectionManager();
                     break;
                 case CONFIGURATION:
-                    GuiBase.openGui(new GuiConfigs());
-                    return;
+                    gui = new GuiConfigs();
+                    break;
                 case LOAD_SCHEMATICS:
                     gui = new GuiSchematicLoad();
                     break;
