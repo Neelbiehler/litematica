@@ -111,6 +111,7 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
     protected final int sizeLayer;
     protected final long totalVolume;
     protected int bits;
+    private long revision;
     /** Note: This is currently only used for the temporary Sponge schematic support */
     protected long[] blockCounts = new long[0];
 
@@ -154,6 +155,22 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
         }
     }
 
+    public long getRevision()
+    {
+        return this.revision;
+    }
+
+    public LitematicaBlockStateContainer copy()
+    {
+        LitematicaBlockStateContainer copy = new LitematicaBlockStateContainer(this.size, this.bits, this.getBackingLongArray().clone());
+        if (!copy.palette.setMapping(this.palette.fromMapping()))
+        {
+            throw new IllegalStateException("Unable to copy schematic palette");
+        }
+        copy.blockCounts = this.blockCounts.clone();
+        return copy;
+    }
+
     public Vec3i getSize()
     {
         return this.size;
@@ -179,12 +196,14 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
     {
         int id = this.palette.idFor(state);
         this.storage.setAt(this.getIndex(x, y, z), id);
+        ++this.revision;
     }
 
     protected void set(int index, BlockState state)
     {
         int id = this.palette.idFor(state);
         this.storage.setAt(index, id);
+        ++this.revision;
     }
 
     protected int getIndex(int x, int y, int z)
@@ -237,8 +256,11 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
             newStorage.setAt(index, oldStorage.getAt(index));
         }
 
-//        this.palette.readFromNBT(oldPalette.writeToNBT());
-        this.palette.readFromData(oldPalette.writeToData());
+        // Keep palette IDs and states intact without a registry-dependent NBT round trip.
+        if (!this.palette.setMapping(oldPalette.fromMapping()))
+        {
+            throw new IllegalStateException("Unable to grow schematic palette");
+        }
 
         return this.palette.idFor(state);
     }

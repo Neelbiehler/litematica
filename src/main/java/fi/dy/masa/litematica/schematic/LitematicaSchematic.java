@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.schematic;
 
+import fi.dy.masa.litematica.schematic.edit.BlockReplacement;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -92,6 +93,13 @@ import fi.dy.masa.litematica.world.SchematicWorldHandler;
 
 public class LitematicaSchematic
 {
+    @Nullable private BlockReplacement lastBlockReplacement;
+
+    @Nullable
+    public BlockReplacement getLastBlockReplacement() { return this.lastBlockReplacement; }
+
+    public void setLastBlockReplacement(@Nullable BlockReplacement edit) { this.lastBlockReplacement = edit; }
+
 	public static final String FILE_EXTENSION = ".litematic";
 	public static final int SCHEMATIC_VERSION_1_13_2 = 5;
 	public static final int MINECRAFT_DATA_VERSION_1_12 = 1139; // MC 1.12
@@ -1361,6 +1369,16 @@ public class LitematicaSchematic
 	{
 		return this.blockContainers.get(regionName);
 	}
+
+    public void replaceSubRegionContainer(String regionName, LitematicaBlockStateContainer container)
+    {
+        LitematicaBlockStateContainer previous = this.blockContainers.get(regionName);
+        if (previous == null || !previous.getSize().equals(container.getSize()))
+        {
+            throw new IllegalArgumentException("Replacement region dimensions must match");
+        }
+        this.blockContainers.put(regionName, container);
+    }
 
 	@Nullable
 	public Map<BlockPos, CompoundData> getBlockEntityMapForRegion(String regionName)
