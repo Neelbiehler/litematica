@@ -30,11 +30,16 @@ public class GuiPlacementWorkspace extends GuiWorkflowBase
     {
         super.initGui();
         int width = this.getScreenWidth() - 24;
-        int half = (width - 6) / 2;
+        int half = (width - 12) / 3;
         this.addDashboardButton(12, 48, half, 24, text("align"), text("align.help"), !this.buildStep,
                 (button, mouse) -> { this.buildStep = false; this.initGui(); });
         this.addDashboardButton(18 + half, 48, half, 24, text("build"), text("build.help"), this.buildStep,
                 (button, mouse) -> { this.buildStep = true; this.initGui(); });
+        this.addDashboardButton(24 + half * 2, 48, half, 24, StringUtils.translate("litematica.gui.canvas.title"),
+                StringUtils.translate("litematica.gui.canvas.hint"), false, (button, mouse) -> {
+                    DataManager.getSchematicPlacementManager().setSelectedSchematicPlacement(this.placement);
+                    this.openChild(new GuiPlacementCanvas());
+                });
         this.addDashboardButton(this.getScreenWidth() - 108, 10, 96, 24,
                 text(this.previewEnabled() ? "hide" : "show"), text("visibility.help"), !this.previewEnabled(),
                 (button, mouse) -> {

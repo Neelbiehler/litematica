@@ -345,6 +345,25 @@ public class SchematicPlacement
         this.verifierType = type;
     }
 
+    /** Copies placement transforms; both placements intentionally share the loaded schematic. */
+    public SchematicPlacement duplicate(BlockPos origin, String name)
+    {
+        SchematicPlacement copy = createFor(this.schematic, origin, name, this.enabled, this.enableRender);
+        copy.rotation = this.rotation;
+        copy.mirror = this.mirror;
+        copy.ignoreEntities = this.ignoreEntities;
+        copy.renderEnclosingBox = this.renderEnclosingBox;
+        copy.relativeSubRegionPlacements.clear();
+        this.relativeSubRegionPlacements.forEach((key, region) ->
+                copy.relativeSubRegionPlacements.put(key, SubRegionPlacement.fromJson(region.toJson())));
+        copy.checkAreSubRegionsModified();
+        copy.updateEnclosingBox();
+        return copy;
+    }
+
+    @Nullable
+    public MaterialListBase getCachedMaterialList() { return this.materialList; }
+
     public MaterialListBase getMaterialList()
     {
         if (this.materialList == null)

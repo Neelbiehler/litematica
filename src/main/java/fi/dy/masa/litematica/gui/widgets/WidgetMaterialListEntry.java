@@ -1,5 +1,7 @@
 package fi.dy.masa.litematica.gui.widgets;
 
+import fi.dy.masa.malilib.util.input.ScanCodes;
+import fi.dy.masa.litematica.gui.UiTheme;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -147,7 +149,8 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
 
         if (this.entry != null)
         {
-            return false;
+            if (click.button() == ScanCodes.OFFSET_MOUSE_LEFT) this.listWidget.getGui().selectMaterial(this.entry);
+            return true;
         }
 
         int column = this.getMouseOverColumn((int) click.x(), (int) click.y());
@@ -238,6 +241,8 @@ public class WidgetMaterialListEntry extends WidgetListEntrySortable<MaterialLis
         }
         else if (this.entry != null)
         {
+            if (this.listWidget.getGui().isSelectedMaterial(this.entry))
+                RenderUtils.drawRect(ctx, this.x, this.y, 2, this.height, UiTheme.ACCENT);
             int multiplier = this.materialList.getMultiplier();
             int countTotal = this.entry.getCountTotal() * multiplier;
             int countMissing = multiplier == 1 ? this.entry.getCountMissing() : countTotal;

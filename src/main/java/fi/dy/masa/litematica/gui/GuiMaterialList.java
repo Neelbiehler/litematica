@@ -1,5 +1,8 @@
 package fi.dy.masa.litematica.gui;
 
+import net.minecraft.world.level.block.Block;
+import java.util.HashSet;
+import java.util.Set;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,10 +48,11 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
     private final MaterialListBase materialList;
     private ExportType exportType = ExportType.WRITE_TO_FILE;
     private boolean isNarrow;
+    @Nullable private MaterialListEntry selectedMaterial;
 
     public GuiMaterialList(MaterialListBase materialList)
     {
-        super(10, 44);
+        super(10, 70);
 
         this.materialList = materialList;
         this.materialList.setCompletionListener(this);
@@ -74,7 +78,7 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
     @Override
     protected int getBrowserHeight()
     {
-        return this.getScreenHeight() - 80;
+        return this.getScreenHeight() - 106;
     }
 
     @Override
@@ -82,9 +86,47 @@ public class GuiMaterialList extends GuiListBase<MaterialListEntry, WidgetMateri
     {
         super.initGui();
 
+        if (this.selectedMaterial != null)
+        {
+            ItemStack selectedStack = this.selectedMaterial.getStack();
+            this.selectedMaterial = this.materialList.getMaterialsAll().stream()
+                    .filter(entry -> ItemStack.isSameItemSameComponents(entry.getStack(), selectedStack)).findFirst().orElse(null);
+        }
         this.createMultiplier();
         this.createButtons();
         this.createCounts();
+        ButtonGeneric replace = new ButtonGeneric(12, 46, 128, 20, GuiBlockReplacement.text("title"));
+        replace.setEnabled(this.materialList.getEditableSchematic() != null);
+        this.addButton(replace, (button, mouse) -> this.openBlockReplacement());
+        String hint = this.materialList.getEditableSchematic() == null ? GuiBlockReplacement.text("unavailable") :
+                this.selectedMaterial == null ? GuiBlockReplacement.text("list.hint") : this.selectedMaterial.getStack().getHoverName().getString();
+        this.addLabel(148, 52, this.getScreenWidth() - 160, 12, UiTheme.MUTED,
+                this.font.plainSubstrByWidth(hint, Math.max(10, this.getScreenWidth() - 160)));
+    }
+
+    public void selectMaterial(MaterialListEntry entry)
+    {
+        this.selectedMaterial = entry;
+        this.initGui();
+    }
+
+    public boolean isSelectedMaterial(MaterialListEntry entry) { return this.selectedMaterial == entry; }
+
+    private void openBlockReplacement()
+    {
+        var schematic = this.materialList.getEditableSchematic();
+        if (schematic == null) return;
+        Set<Block> matches = new HashSet<>();
+        if (this.selectedMaterial != null) for (String region : schematic.getAreas().keySet())
+        {
+            var container = schematic.getSubRegionContainer(region);
+            if (container != null) container.getPalette().fromMapping().forEach(state -> {
+                if (!state.isAir() && state.getBlock().asItem() == this.selectedMaterial.getStack().getItem()) matches.add(state.getBlock());
+            });
+        }
+        GuiBlockReplacement screen = new GuiBlockReplacement(schematic, matches.size() == 1 ? matches.iterator().next() : null, this.materialList);
+        screen.setParent(this);
+        GuiBase.openGui(screen);
     }
 
     private void createMultiplier()

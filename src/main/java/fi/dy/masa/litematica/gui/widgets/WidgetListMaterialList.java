@@ -37,6 +37,8 @@ public class WidgetListMaterialList extends WidgetListBase<MaterialListEntry, Wi
         this.shouldSortList = true;
     }
 
+    public GuiMaterialList getGui() { return this.gui; }
+
     @Override
     public void drawContents(GuiContext ctx, int mouseX, int mouseY, float partialTicks)
     {

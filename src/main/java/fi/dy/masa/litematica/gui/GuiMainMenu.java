@@ -74,7 +74,7 @@ public class GuiMainMenu extends GuiWorkflowBase
                 this.createAction(contentX, y + cardHeight + 6, contentWidth, cardHeight, "loaded", false,
                                   ButtonListenerChangeMenu.ButtonType.LOADED_SCHEMATICS);
                 this.createAction(contentX, y + (cardHeight + 6) * 2, contentWidth, cardHeight, "placements", false,
-                                  ButtonListenerChangeMenu.ButtonType.SCHEMATIC_PLACEMENTS);
+                                  ButtonListenerChangeMenu.ButtonType.CANVAS);
                 break;
             case CREATE:
                 this.createAction(contentX, y, contentWidth, cardHeight, "select", true,
@@ -206,6 +206,9 @@ public class GuiMainMenu extends GuiWorkflowBase
 
             switch (this.type)
             {
+                case CANVAS:
+                    gui = new GuiPlacementCanvas();
+                    break;
                 case CAPTURE:
                     gui = new GuiCaptureWorkspace();
                     break;
@@ -250,6 +253,7 @@ public class GuiMainMenu extends GuiWorkflowBase
 
         public enum ButtonType
         {
+            CANVAS                     ("litematica.gui.canvas.title", ButtonIcons.SCHEMATIC_PLACEMENTS),
             CAPTURE                    ("litematica.gui.dashboard.select.title", ButtonIcons.AREA_EDITOR),
             // List loaded Schematics in SchematicHolder
             LOADED_SCHEMATICS           ("litematica.gui.button.change_menu.show_loaded_schematics", ButtonIcons.LOADED_SCHEMATICS),

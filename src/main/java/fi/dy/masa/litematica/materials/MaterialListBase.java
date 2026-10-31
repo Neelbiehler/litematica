@@ -1,5 +1,6 @@
 package fi.dy.masa.litematica.materials;
 
+import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,9 @@ import fi.dy.masa.litematica.util.BlockInfoListType;
 
 public abstract class MaterialListBase implements IMaterialList
 {
+    @Nullable
+    public LitematicaSchematic getEditableSchematic() { return null; }
+
     protected final MaterialListHudRenderer hudRenderer = new MaterialListHudRenderer(this);
     protected final Set<MaterialListEntry> ignored = new HashSet<>();
     protected final List<MaterialListEntry> materialListPreFiltered = new ArrayList<>();

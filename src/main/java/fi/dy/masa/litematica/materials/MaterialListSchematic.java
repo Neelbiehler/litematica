@@ -29,6 +29,9 @@ public class MaterialListSchematic extends MaterialListBase
     }
 
     @Override
+    public LitematicaSchematic getEditableSchematic() { return this.schematic; }
+
+    @Override
     public void reCreateMaterialList()
     {
         this.materialListAll = ImmutableList.copyOf(MaterialListUtils.createMaterialListFor(this.schematic, this.regions));

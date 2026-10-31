@@ -1,5 +1,7 @@
 package fi.dy.masa.litematica.scheduler.tasks;
 
+import fi.dy.masa.litematica.materials.MaterialListPlacement;
+import net.minecraft.world.level.ChunkPos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,6 +33,20 @@ public class TaskCountBlocksPlacement extends TaskCountBlocksBase
 {
     protected final SchematicPlacement schematicPlacement;
     protected final boolean ignoreState;
+    private final long generation;
+
+    @Override
+    public boolean shouldRemove()
+    {
+        return super.shouldRemove() || (this.materialList instanceof MaterialListPlacement list && list.getGeneration() != this.generation);
+    }
+
+    @Override
+    protected boolean canProcessChunk(ChunkPos pos)
+    {
+        return super.canProcessChunk(pos) && (!(this.materialList instanceof MaterialListPlacement list) ||
+                list.isChunkReady(pos, this.schematicWorld.getChunkSource().getChunkIfExists(pos.x(), pos.z())));
+    }
 
     public TaskCountBlocksPlacement(SchematicPlacement schematicPlacement, IMaterialList materialList)
     {
@@ -41,6 +57,7 @@ public class TaskCountBlocksPlacement extends TaskCountBlocksBase
     {
         super(materialList, "litematica.gui.label.task_name.material_list");
 
+        this.generation = materialList instanceof MaterialListPlacement list ? list.getGeneration() : 0;
         this.schematicPlacement = schematicPlacement;
         this.ignoreState = ignoreState;
         Collection<Box> boxes = schematicPlacement.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED).values();
